@@ -1,0 +1,58 @@
+http:
+  port: ${SERVER_PORT:8090}
+
+client:
+  kafka:
+    consumer:
+      checkingTimeoutMs: ${KAFKA_CHECKING_TIMEOUT_MS:10000}
+      responseTimeoutMs: ${KAFKA_RESPONSE_TIMEOUT_MS:10000}
+      consumerSize: ${KAFKA_CONSUMER_SIZE:10}
+      closeConsumersTimeout: ${KAFKA_CLOSE_CONSUMER_TIMEOUT:15000}
+      property:
+        bootstrap.servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka.host:9092}
+        group.id: ${KAFKA_CONSUMER_GROUP_ID:clickhouse-query-execution}
+        auto.offset.reset: ${KAFKA_AUTO_OFFSET_RESET:earliest}
+        enable.auto.commit: ${KAFKA_AUTO_COMMIT:false}
+        auto.commit.interval.ms: ${KAFKA_AUTO_INTERVAL_MS:1000}
+
+env:
+  name: ${ENV:test}
+
+datamart:
+  hot-delta-field-name: sys_from
+datasource:
+  clickhouse:
+    database: ${CLICKHOUSE_DB_NAME:test1}
+    user: ${CLICKHOUSE_USERNAME:default}
+    password: ${CLICKHOUSE_PASS:}
+    hosts: ${CLICKHOUSE_HOSTS:clockhouse.host:8123}
+
+verticle:
+  worker:
+    new-data-worker:
+      poolSize: ${DATA_WORKER_POOL_SIZE:20}
+      poolName: ${DATA_WORKER_POOL_NAME:new-data-worker}
+    task-worker:
+      poolSize: ${TASK_WORKER_POOL_SIZE:12}
+      poolName: ${TASK_WORKER_POOL_NAME:task-worker}
+      responseTimeoutMs: ${TASK_WORKER_RESPONSE_TIMEOUT_MS:86400000}
+    insert-worker:
+      poolSize: ${INSERT_WORKER_POOL_SIZE:32}
+      poolName: ${INSERT_WORKER_POOL_NAME:insert-worker}
+      responseTimeoutMs: ${INSERT_WORKER_RESPONSE_TIMEOUT_MS:86400000}
+      insertPeriodMs: ${INSERT_PERIOD_MS:1000}
+      batchSize: ${INSERT_BATCH_SIZE:500}
+    kafka-consumer-worker:
+      poolSize: ${KAFKA_CONSUMER_WORKER_POOL_SIZE:32}
+      poolName: ${KAFKA_CONSUMER_WORKER_POOL_NAME:insert-worker}
+      responseTimeoutMs: ${KAFKA_CONSUMER_WORKER_RESPONSE_TIMEOUT_MS:86400000}
+      maxFetchSize: ${KAFKA_CONSUMER_MAX_FETCH_SIZE:10000}
+    kafka-commit-worker:
+      poolSize: ${KAFKA_COMMIT_WORKER_POOL_SIZE:1}
+      poolName: ${KAFKA_COMMIT_WORKER_POOL_NAME:commit-worker}
+      commitPeriodMs: ${KAFKA_COMMIT_WORKER_COMMIT_PERIOD_MS:1000}
+
+logging:
+  level:
+    io.arenadata.dtm: DEBUG
+    org.apache.kafka: INFO

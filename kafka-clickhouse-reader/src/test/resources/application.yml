@@ -1,0 +1,25 @@
+vertx:
+  clustered:true
+
+http:
+  port: 8080
+
+timezone: ${MPPR_TIME_ZONE:UTC}
+
+datasource:
+  clickhouse:
+    database: ${CLICKHOUSE_DB_NAME:test1}
+    user: ${CLICKHOUSE_USERNAME:default}
+    password: ${CLICKHOUSE_PASS:}
+    hosts: ${CLICKHOUSE_HOSTS:clickhouse.host:8123}
+    fetchSize: ${CLICKHOUSE_FETCH_SIZE:1000}
+
+kafka:
+  clickhouse:
+    producer:
+      property:
+        key.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+        value.serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+    cluster:
+      zookeeperHosts: ${ZOOKEEPER_HOSTS:kafka-1.dtm.local}
+      rootPath: arenadata/cluster/21
