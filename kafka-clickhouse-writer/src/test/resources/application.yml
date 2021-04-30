@@ -1,0 +1,29 @@
+client:
+  kafka:
+    consumer:
+      timeout-checking-period: 1000
+      response-timeout: 1000
+      property:
+        group.id: test_datamart.consumer
+        auto.offset.reset: earliest
+        enable.auto.commit: false
+env:
+  name: ${ENV:local}
+datamart:
+  hot-delta-field-name: sys_from
+datasource:
+  clickhouse:
+    database: ${CLICKHOUSE_DB_NAME:test}
+    user: ${CLICKHOUSE_USERNAME:}
+    password: ${CLICKHOUSE_PASS:}
+    hosts: ${CLICKHOUSE_HOSTS:localhost:8123}
+verticle:
+  worker:
+    new-data-worker:
+      poolSize: 20
+      pool-name: new-data-worker
+
+logging:
+  level:
+    io.arenadata.dtm: DEBUG
+    org.apache.kafka: INFO
