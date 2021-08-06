@@ -22,7 +22,7 @@
 
     <groupId>io.arenadata.dtm</groupId>
     <artifactId>kafka-clickhouse-writer</artifactId>
-    <version>3.5.0</version>
+    <version>3.5.1</version>
     <name>Kafka clickhouse writer</name>
 
     <parent>
