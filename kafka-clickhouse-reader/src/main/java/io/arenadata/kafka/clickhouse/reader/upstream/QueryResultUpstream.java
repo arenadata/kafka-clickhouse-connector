@@ -15,7 +15,6 @@
  */
 package io.arenadata.kafka.clickhouse.reader.upstream;
 
-import io.arenadata.kafka.clickhouse.reader.avro.CompressorCodec;
 import io.arenadata.kafka.clickhouse.reader.avro.codec.AvroQueryResultEncoder;
 import io.arenadata.kafka.clickhouse.reader.avro.model.AvroQueryResultRow;
 import io.arenadata.kafka.clickhouse.reader.model.DtmQueryResponseMetadata;
@@ -27,7 +26,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
-import org.apache.avro.file.CodecFactory;
 
 import java.util.stream.Collectors;
 
@@ -37,7 +35,6 @@ public class QueryResultUpstream implements Upstream<QueryResultItem> {
     private final PublishService publishService;
     private final Schema schema;
     private final AvroQueryResultEncoder resultEncoder;
-    private final CodecFactory codec = CompressorCodec.ZSTD;
 
     public QueryResultUpstream(PublishService publishService, Schema schema) {
         this.publishService = publishService;
@@ -50,7 +47,7 @@ public class QueryResultUpstream implements Upstream<QueryResultItem> {
         try {
             final byte[] bytes = resultEncoder.encode(item.getDataSet().stream()
                     .map(row -> new AvroQueryResultRow(schema, row))
-                    .collect(Collectors.toList()), schema, codec);
+                    .collect(Collectors.toList()), schema);
             send(queryRequest, item, bytes, handler);
         } catch (Exception e) {
             log.error("Error in sending message to kafka topic: table [{}] chunkNumber [{}] topic [{}]",
