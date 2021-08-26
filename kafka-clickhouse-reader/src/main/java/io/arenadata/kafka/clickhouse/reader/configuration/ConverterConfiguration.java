@@ -36,28 +36,27 @@ public class ConverterConfiguration {
 
     @Bean("clickhouseTransformerMap")
     public Map<ColumnType, Map<Class<?>, ColumnTransformer>> clickhouseTransformerMap(@Value("${timezone}") String timeZone) {
-        Map<ColumnType, Map<Class<?>, ColumnTransformer>> transformerMap = new HashMap<>(getCommonTransformerMap());
+        Map<ColumnType, Map<Class<?>, ColumnTransformer>> transformerMap = new HashMap<>();
+        Map<Class<?>, ColumnTransformer> varcharTransformerMap = getTransformerMap(new VarcharFromStringTransformer());
+        Map<Class<?>, ColumnTransformer> longFromNumberTransformerMap = getTransformerMap(new LongFromNumberTransformer());
+        transformerMap.put(ColumnType.CHAR, varcharTransformerMap);
+        transformerMap.put(ColumnType.VARCHAR, varcharTransformerMap);
+        transformerMap.put(ColumnType.BIGINT, longFromNumberTransformerMap);
+        transformerMap.put(ColumnType.INT, longFromNumberTransformerMap);
+        transformerMap.put(ColumnType.INT32, longFromNumberTransformerMap);
+        transformerMap.put(ColumnType.DOUBLE, getTransformerMap(new DoubleFromNumberTransformer()));
+        transformerMap.put(ColumnType.FLOAT, getTransformerMap(new FloatFromNumberTransformer()));
         transformerMap.put(ColumnType.DATE, getTransformerMap(new IntegerFromLocalDateNumberTransformer()));
-        transformerMap.put(ColumnType.TIME, getTransformerMap(new LongFromNumberTransformer()));
+        transformerMap.put(ColumnType.TIME, longFromNumberTransformerMap);
         transformerMap.put(ColumnType.TIMESTAMP, getTransformerMap(new LongFromLocalDateTimeStringTransformer(
                         DateTimeFormatter.ofPattern(DATE_TIME_FORMAT),
                         getTimeZone(timeZone)),
                 new LongTsFromLongTransformer()));
         transformerMap.put(ColumnType.BOOLEAN, getTransformerMap(new BooleanFromBooleanTransformer(),
                 new BooleanFromNumericTransformer()));
-        return transformerMap;
-    }
-
-    private Map<ColumnType, Map<Class<?>, ColumnTransformer>> getCommonTransformerMap() {
-        Map<ColumnType, Map<Class<?>, ColumnTransformer>> transformerMap = new HashMap<>();
-        transformerMap.put(ColumnType.INT, getTransformerMap(new LongFromNumberTransformer()));
-        transformerMap.put(ColumnType.FLOAT, getTransformerMap(new FloatFromNumberTransformer()));
-        transformerMap.put(ColumnType.VARCHAR, getTransformerMap(new VarcharFromStringTransformer()));
-        transformerMap.put(ColumnType.CHAR, transformerMap.get(ColumnType.VARCHAR));
-        transformerMap.put(ColumnType.BIGINT, getTransformerMap(new BigintFromNumberTransformer()));
-        transformerMap.put(ColumnType.DOUBLE, getTransformerMap(new DoubleFromNumberTransformer()));
-        transformerMap.put(ColumnType.UUID, getTransformerMap(new UuidFromStringTransformer()));
         transformerMap.put(ColumnType.BLOB, getTransformerMap(new BlobFromObjectTransformer()));
+        transformerMap.put(ColumnType.UUID, varcharTransformerMap);
+        transformerMap.put(ColumnType.LINK, varcharTransformerMap);
         transformerMap.put(ColumnType.ANY, getTransformerMap(new AnyFromObjectTransformer()));
         return transformerMap;
     }
