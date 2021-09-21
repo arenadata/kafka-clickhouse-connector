@@ -22,7 +22,7 @@ import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class IntegerFromLocalDateNumberTransformer extends AbstractColumnTransformer<Integer, Number> {
+public class IntegerFromNumberTransformer extends AbstractColumnTransformer<Integer, Number> {
 
     @Override
     public Integer transformValue(Number value) {

@@ -39,14 +39,15 @@ public class ConverterConfiguration {
         Map<ColumnType, Map<Class<?>, ColumnTransformer>> transformerMap = new HashMap<>();
         Map<Class<?>, ColumnTransformer> varcharTransformerMap = getTransformerMap(new VarcharFromStringTransformer());
         Map<Class<?>, ColumnTransformer> longFromNumberTransformerMap = getTransformerMap(new LongFromNumberTransformer());
+        Map<Class<?>, ColumnTransformer> integerTransformerMap = getTransformerMap(new IntegerFromNumberTransformer());
         transformerMap.put(ColumnType.CHAR, varcharTransformerMap);
         transformerMap.put(ColumnType.VARCHAR, varcharTransformerMap);
         transformerMap.put(ColumnType.BIGINT, longFromNumberTransformerMap);
         transformerMap.put(ColumnType.INT, longFromNumberTransformerMap);
-        transformerMap.put(ColumnType.INT32, longFromNumberTransformerMap);
+        transformerMap.put(ColumnType.INT32, integerTransformerMap);
         transformerMap.put(ColumnType.DOUBLE, getTransformerMap(new DoubleFromNumberTransformer()));
         transformerMap.put(ColumnType.FLOAT, getTransformerMap(new FloatFromNumberTransformer()));
-        transformerMap.put(ColumnType.DATE, getTransformerMap(new IntegerFromLocalDateNumberTransformer()));
+        transformerMap.put(ColumnType.DATE, integerTransformerMap);
         transformerMap.put(ColumnType.TIME, longFromNumberTransformerMap);
         transformerMap.put(ColumnType.TIMESTAMP, getTransformerMap(new LongFromLocalDateTimeStringTransformer(
                         DateTimeFormatter.ofPattern(DATE_TIME_FORMAT),
