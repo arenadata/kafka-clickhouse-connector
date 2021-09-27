@@ -27,7 +27,7 @@
 
     <groupId>io.arenadata.dtm</groupId>
     <artifactId>kafka-clickhouse-connector-parent</artifactId>
-    <version>3.5.3</version>
+    <version>3.5.4</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -38,7 +38,7 @@
         <apache.commons.lang.version>3.10</apache.commons.lang.version>
         <avro.version>1.9.2</avro.version>
         <confluent.version>5.4.1</confluent.version>
-        <clickhouse.jdbc.version>0.2.4</clickhouse.jdbc.version>
+        <clickhouse.jdbc.version>0.3.1</clickhouse.jdbc.version>
         <guava.version>28.2-jre</guava.version>
         <logback.version>1.2.3</logback.version>
         <lombok.version>1.18.12</lombok.version>
