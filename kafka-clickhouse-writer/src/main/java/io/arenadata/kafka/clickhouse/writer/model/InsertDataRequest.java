@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Writer
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@ package io.arenadata.kafka.clickhouse.writer.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.arenadata.kafka.clickhouse.writer.avro.codec.schema.SchemaDeserializer;
+import io.arenadata.kafka.clickhouse.avro.SchemaDeserializer;
+import io.arenadata.kafka.clickhouse.avro.SchemaSerializer;
 import io.arenadata.kafka.clickhouse.writer.model.kafka.KafkaBrokerInfo;
-import io.swagger.v3.core.jackson.SchemaSerializer;
 import lombok.Data;
 import org.apache.avro.Schema;
 

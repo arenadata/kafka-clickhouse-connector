@@ -4,8 +4,6 @@ vertx:
 http:
   port: 8080
 
-timezone: ${MPPR_TIME_ZONE:UTC}
-
 datasource:
   clickhouse:
     database: ${CLICKHOUSE_DB_NAME:test1}

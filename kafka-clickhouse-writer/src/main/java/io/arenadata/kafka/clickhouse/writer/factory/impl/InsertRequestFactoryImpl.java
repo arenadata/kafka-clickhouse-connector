@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Writer
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package io.arenadata.kafka.clickhouse.writer.factory.impl;
 
 import com.google.common.base.Strings;
+import io.arenadata.kafka.clickhouse.util.DateTimeUtils;
 import io.arenadata.kafka.clickhouse.writer.configuration.properties.DatamartProperties;
 import io.arenadata.kafka.clickhouse.writer.configuration.properties.EnvProperties;
 import io.arenadata.kafka.clickhouse.writer.factory.InsertRequestFactory;
@@ -32,7 +33,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +46,8 @@ public class InsertRequestFactoryImpl implements InsertRequestFactory {
     private final EnvProperties envProperties;
 
     @Autowired
-    public InsertRequestFactoryImpl(DatamartProperties properties, EnvProperties envProperties) {
+    public InsertRequestFactoryImpl(DatamartProperties properties,
+                                    EnvProperties envProperties) {
         deltaHotFieldName = Strings.isNullOrEmpty(properties.getHotDeltaFieldName()) ?
                 DEFAULT_HOT_DELTA_FIELD_NAME : properties.getHotDeltaFieldName();
         this.envProperties = envProperties;
@@ -91,18 +92,17 @@ public class InsertRequestFactoryImpl implements InsertRequestFactory {
 
     private Object convertValueIfNeeded(Object value) {
         if (value instanceof LocalDate) {
-            return ((LocalDate) value).toEpochDay();
+            return DateTimeUtils.toEpochDay((LocalDate) value);
         } else if (value instanceof LocalTime) {
-            return ((LocalTime) value).toNanoOfDay();
+            return DateTimeUtils.toMicros((LocalTime) value);
         } else if (value instanceof LocalDateTime) {
-            return ((LocalDateTime) value).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000;
+            return DateTimeUtils.toMicros((LocalDateTime) value);
         }
         return value;
     }
 
     private Pair<Integer, Integer> getIndexedHotDeltaPair(InsertDataContext context, List<Schema.Field> fields) {
-        val hotDeltaField = fields.stream().filter(field -> deltaHotFieldName
-                .equalsIgnoreCase(field.name()))
+        val hotDeltaField = fields.stream().filter(field -> deltaHotFieldName.equalsIgnoreCase(field.name()))
                 .findAny()
                 .orElse(null);
         return Pair.of(hotDeltaField == null ? -1 : hotDeltaField.pos(), context.getRequest().getHotDelta());
@@ -131,15 +131,5 @@ public class InsertRequestFactoryImpl implements InsertRequestFactory {
                 envProperties.getName() + envProperties.getDelimiter() + request.getDatamart(),
                 request.getTableName() + "_ext_shard", String.join(",", insertColumns),
                 String.join(",", insertValues));
-    }
-
-    private void tryAddHotDelta(List<String> insertColumns,
-                                List<String> insertValues,
-                                Integer hotDeltaPos) {
-        if (hotDeltaPos == -1) {
-            insertColumns.add(deltaHotFieldName);
-            int hotDeltaValueIndex = insertValues.size() + 1;
-            insertValues.add("$" + hotDeltaValueIndex);
-        }
     }
 }

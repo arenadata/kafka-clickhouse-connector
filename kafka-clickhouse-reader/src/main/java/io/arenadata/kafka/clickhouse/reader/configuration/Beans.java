@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Reader
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package io.arenadata.kafka.clickhouse.reader.configuration;
 
+import io.arenadata.kafka.clickhouse.reader.factory.QueryResultUpstreamFactory;
 import io.arenadata.kafka.clickhouse.reader.factory.UpstreamFactory;
+import io.arenadata.kafka.clickhouse.reader.model.QueryResultItem;
 import io.arenadata.kafka.clickhouse.reader.service.PublishService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import io.arenadata.kafka.clickhouse.reader.factory.QueryResultUpstreamFactory;
-import io.arenadata.kafka.clickhouse.reader.model.QueryResultItem;
 
 @Configuration
 public class Beans {

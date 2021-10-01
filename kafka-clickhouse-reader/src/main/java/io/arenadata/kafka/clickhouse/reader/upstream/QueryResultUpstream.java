@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Reader
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package io.arenadata.kafka.clickhouse.reader.upstream;
 
-import io.arenadata.kafka.clickhouse.reader.avro.codec.AvroQueryResultEncoder;
-import io.arenadata.kafka.clickhouse.reader.avro.model.AvroQueryResultRow;
-import io.arenadata.kafka.clickhouse.reader.model.DtmQueryResponseMetadata;
+import io.arenadata.kafka.clickhouse.avro.codec.AvroQueryResultEncoder;
+import io.arenadata.kafka.clickhouse.avro.model.AvroQueryResultRow;
+import io.arenadata.kafka.clickhouse.avro.model.DtmQueryResponseMetadata;
 import io.arenadata.kafka.clickhouse.reader.model.QueryRequest;
 import io.arenadata.kafka.clickhouse.reader.model.QueryResultItem;
 import io.arenadata.kafka.clickhouse.reader.service.PublishService;

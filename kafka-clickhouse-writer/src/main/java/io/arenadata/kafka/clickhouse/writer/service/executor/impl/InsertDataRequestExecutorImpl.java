@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Writer
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,18 @@ package io.arenadata.kafka.clickhouse.writer.service.executor.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.arenadata.kafka.clickhouse.writer.configuration.properties.VerticleProperties;
-import io.arenadata.kafka.clickhouse.writer.repository.InsertDataContextRepository;
-import io.arenadata.kafka.clickhouse.writer.verticle.ConfigurableVerticle;
-import io.arenadata.kafka.clickhouse.writer.verticle.KafkaConsumerVerticle;
 import io.arenadata.kafka.clickhouse.writer.factory.InsertRequestFactory;
 import io.arenadata.kafka.clickhouse.writer.model.DataTopic;
 import io.arenadata.kafka.clickhouse.writer.model.InsertDataContext;
 import io.arenadata.kafka.clickhouse.writer.model.kafka.InsertChunk;
 import io.arenadata.kafka.clickhouse.writer.model.kafka.TopicPartitionConsumer;
+import io.arenadata.kafka.clickhouse.writer.repository.InsertDataContextRepository;
 import io.arenadata.kafka.clickhouse.writer.service.executor.InsertDataRequestExecutor;
 import io.arenadata.kafka.clickhouse.writer.service.kafka.KafkaConsumerService;
+import io.arenadata.kafka.clickhouse.writer.verticle.ConfigurableVerticle;
 import io.arenadata.kafka.clickhouse.writer.verticle.InsertVerticle;
 import io.arenadata.kafka.clickhouse.writer.verticle.KafkaCommitVerticle;
+import io.arenadata.kafka.clickhouse.writer.verticle.KafkaConsumerVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;

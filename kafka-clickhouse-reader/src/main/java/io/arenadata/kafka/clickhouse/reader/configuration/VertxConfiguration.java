@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Reader
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,9 +49,7 @@ public class VertxConfiguration implements ApplicationListener<ApplicationReadyE
      */
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        // Получим ссылку на экземляр vertx или исключение при отсутствии бина
         Vertx vertx = event.getApplicationContext().getBean(Vertx.class);
-        // Соберем все вертикали для деплоя
         Map<String, Verticle> verticles = event.getApplicationContext().getBeansOfType(Verticle.class);
         log.debug("Verticles found: {}", verticles.size());
         verticles.forEach((key, value) -> {

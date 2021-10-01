@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Writer
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package io.arenadata.kafka.clickhouse.writer.service.executor.impl;
 
+import io.arenadata.kafka.clickhouse.writer.dao.ClickhouseDao;
 import io.arenadata.kafka.clickhouse.writer.model.InsertDataContext;
 import io.arenadata.kafka.clickhouse.writer.model.kafka.InsertChunk;
-import io.arenadata.kafka.clickhouse.writer.dao.ClickhouseDao;
 import io.arenadata.kafka.clickhouse.writer.service.executor.DataSourceExecutor;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;

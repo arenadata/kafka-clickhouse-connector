@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Writer
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package io.arenadata.kafka.clickhouse.writer.verticle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.arenadata.kafka.clickhouse.writer.avro.codec.AvroDecoder;
+import io.arenadata.kafka.clickhouse.avro.codec.AvroDecoder;
 import io.arenadata.kafka.clickhouse.writer.configuration.properties.VerticleProperties;
 import io.arenadata.kafka.clickhouse.writer.factory.InsertRequestFactory;
 import io.arenadata.kafka.clickhouse.writer.model.DataTopic;
@@ -25,7 +25,6 @@ import io.arenadata.kafka.clickhouse.writer.model.InsertDataContext;
 import io.arenadata.kafka.clickhouse.writer.model.kafka.PartitionOffset;
 import io.arenadata.kafka.clickhouse.writer.model.kafka.TopicPartitionConsumer;
 import io.arenadata.kafka.clickhouse.writer.service.kafka.KafkaConsumerService;
-import io.arenadata.kafka.clickhouse.writer.avro.codec.ClickhouseAvroDecoder;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
@@ -47,7 +46,7 @@ import java.util.stream.Collectors;
 public class KafkaCommitVerticle extends ConfigurableVerticle {
     public static final String START_COMMIT = "kafka_commit_start";
     public static final String KAFKA_COMMIT_TOPIC = "kafka_consumer_offset_commit";
-    private final AvroDecoder decoder = new ClickhouseAvroDecoder();
+    private final AvroDecoder decoder = new AvroDecoder();
     private final VerticleProperties.CommitWorkerProperties workerProperties;
     private final HashMap<TopicPartition, TopicPartitionConsumer> consumerMap;
     private final InsertRequestFactory insertRequestFactory;
