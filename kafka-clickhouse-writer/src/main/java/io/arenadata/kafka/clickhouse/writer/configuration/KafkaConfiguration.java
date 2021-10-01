@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Writer
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 package io.arenadata.kafka.clickhouse.writer.configuration;
 
 import io.arenadata.kafka.clickhouse.writer.configuration.properties.kafka.KafkaProperties;
+import io.arenadata.kafka.clickhouse.writer.factory.KafkaConsumerFactory;
 import io.arenadata.kafka.clickhouse.writer.factory.impl.VertxKafkaConsumerFactory;
 import io.vertx.core.Vertx;
 import lombok.var;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import io.arenadata.kafka.clickhouse.writer.factory.KafkaConsumerFactory;
 
 import java.util.HashMap;
 

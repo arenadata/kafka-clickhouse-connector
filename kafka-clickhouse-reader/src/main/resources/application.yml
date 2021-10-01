@@ -15,8 +15,6 @@ verticle:
 http:
   port: ${SERVER_PORT:8086}
 
-timezone: ${MPPR_TIME_ZONE:UTC}
-
 datasource:
   clickhouse:
     database: ${CLICKHOUSE_DB_NAME:test1}

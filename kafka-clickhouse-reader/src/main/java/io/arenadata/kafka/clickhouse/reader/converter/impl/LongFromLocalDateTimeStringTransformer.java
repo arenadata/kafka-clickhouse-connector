@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Reader
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@ package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
 import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
+import io.arenadata.kafka.clickhouse.util.DateTimeUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,15 +35,15 @@ import java.util.Collections;
 public class LongFromLocalDateTimeStringTransformer extends AbstractColumnTransformer<Long, String> {
 
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-    private ZoneId zoneId = ZoneId.of("UTC");
 
     @Override
     public Long transformValue(String value) {
-        return value == null ? null : LocalDateTime
-                .parse(value, dateTimeFormatter)
-                .atZone(zoneId).toLocalDateTime()
-                .toInstant(ZoneOffset.UTC)
-                .toEpochMilli();
+        if (value == null) {
+            return null;
+        }
+
+        LocalDateTime localDateTime = LocalDateTime.parse(value, dateTimeFormatter);
+        return DateTimeUtils.toMicros(localDateTime);
     }
 
     @Override

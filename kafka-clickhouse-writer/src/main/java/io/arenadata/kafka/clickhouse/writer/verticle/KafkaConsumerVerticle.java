@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Kafka Clickhouse Writer
+ * Copyright © 2021 Arenadata Software LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
  */
 package io.arenadata.kafka.clickhouse.writer.verticle;
 
+import io.arenadata.kafka.clickhouse.avro.codec.AvroDecoder;
 import io.arenadata.kafka.clickhouse.writer.configuration.properties.VerticleProperties;
-import io.arenadata.kafka.clickhouse.writer.avro.codec.ClickhouseAvroDecoder;
-import io.arenadata.kafka.clickhouse.writer.avro.codec.AvroDecoder;
 import io.arenadata.kafka.clickhouse.writer.factory.InsertRequestFactory;
 import io.arenadata.kafka.clickhouse.writer.model.DataTopic;
 import io.arenadata.kafka.clickhouse.writer.model.InsertDataContext;
@@ -48,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class KafkaConsumerVerticle extends ConfigurableVerticle {
     public static final String START_TOPIC = "kafka_consumer_start";
     public static final String KAFKA_COMMIT_TOPIC = "kafka_consumer_offset_commit";
-    private final AvroDecoder decoder = new ClickhouseAvroDecoder();
+    private final AvroDecoder decoder = new AvroDecoder();
     private final VerticleProperties.KafkaConsumerWorkerProperties workerProperties;
     private final InsertRequestFactory insertRequestFactory;
     private final String id = UUID.randomUUID().toString();

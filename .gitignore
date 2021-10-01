@@ -1,13 +1,9 @@
 ### Maven ###
-/kafka-clickhouse-reader/target
-/kafka-clickhouse-writer/target
+target
+/target
 ### IntelliJ IDEA ###
 .idea
 *.iws
 *.iml
 *.ipr
 out/
-/kafka-clickhouse-reader/*.iml
-/kafka-clickhouse-reader/*.idea
-/kafka-clickhouse-writer/*.iml
-/kafka-clickhouse-writer/*.idea
