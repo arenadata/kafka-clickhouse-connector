@@ -1,5 +1,5 @@
 # kafka-clickhouse-connector
-An obligatory supporting service to the [Prostore main service](https://github.com/arenadata/prostore) `dtm-query-execution-core` that
+A supporting service to the [Prostore main service](https://github.com/arenadata/prostore) `dtm-query-execution-core` that
 communicates with the respective DBMS.
 
 ## Useful links
