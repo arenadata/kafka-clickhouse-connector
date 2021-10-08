@@ -13,8 +13,7 @@ communicates with the respective DBMS.
 git clone https://github.com/arenadata/kafka-clickhouse-connector
 # build without any tests 
 cd ~/kafka-clickhouse-connector
-mvn clean
-mvn install -DskipTests=true
+mvn clean install -DskipTests=true
 ```
 
 ### Connectors configuration
