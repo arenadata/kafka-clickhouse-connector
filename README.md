@@ -39,12 +39,12 @@ sudo ln -s ~/kafka-clickhouse-connector/kafka-clickhouse-reader/src/main/resourc
 #### Run the kafka-clickhouse-writer connector as a single jar
 ```shell script
 cd ~/kafka-clickhouse-connector/kafka-clickhouse-writer/target
-java -Dspring.profiles.active=default -jar kafka-clickhouse-writer-<version>.jar
+java -jar kafka-clickhouse-writer-<version>.jar
 ```
 #### Run the kafka-clickhouse-reader connector as a single jar
 ```shell script
 cd ~/kafka-clickhouse-connector/kafka-clickhouse-reader/target
-java -Dspring.profiles.active=default -jar kafka-clickhouse-reader-<version>.jar
+java -jar kafka-clickhouse-reader-<version>.jar
 ```
 
 ### Available endpoints
