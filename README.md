@@ -10,7 +10,7 @@ communicates with the respective DBMS.
 ### The cloning and building of kafka-clickhouse-connector
 ```shell script
 #clone
-git clone https://github.com/arenadata/kafka-clickhouse-connector
+git clone https://github.com/arenadata/kafka-clickhouse-connector ~/
 # build without any tests 
 cd ~/kafka-clickhouse-connector
 mvn clean install -DskipTests=true
