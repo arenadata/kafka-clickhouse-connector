@@ -15,11 +15,11 @@
  */
 package io.arenadata.kafka.clickhouse.reader.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.arenadata.kafka.clickhouse.reader.model.QueryRequest;
 import io.arenadata.kafka.clickhouse.reader.service.QueryDispatcher;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,10 +33,12 @@ import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 public class QueryController {
 
     private final QueryDispatcher queryDispatcher;
+    private final ObjectMapper mapper;
 
     @Autowired
-    public QueryController(QueryDispatcher queryDispatcher) {
+    public QueryController(QueryDispatcher queryDispatcher, ObjectMapper mapper) {
         this.queryDispatcher = queryDispatcher;
+        this.mapper = mapper;
     }
 
     public void query(RoutingContext context) {
@@ -44,9 +46,9 @@ public class QueryController {
         try {
             String bodyAsString = context.getBodyAsString();
             log.info("Received request {}", bodyAsString);
-            query = Json.decodeValue(bodyAsString, QueryRequest.class);
+            query = mapper.readValue(bodyAsString, QueryRequest.class);
             log.info("Received request sql=[{}], chunkSize=[{}]", query.getSql(), query.getChunkSize());
-        } catch (DecodeException e) {
+        } catch (JsonProcessingException e) {
             log.error("Decode request error", e);
             context.fail(e);
             return;
