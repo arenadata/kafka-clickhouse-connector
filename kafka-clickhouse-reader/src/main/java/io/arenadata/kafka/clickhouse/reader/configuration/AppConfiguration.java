@@ -16,6 +16,7 @@
 package io.arenadata.kafka.clickhouse.reader.configuration;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -48,6 +49,7 @@ public class AppConfiguration {
     mapper.registerModule(new JavaTimeModule());
     mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     return mapper;
   }
 }
