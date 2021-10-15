@@ -16,13 +16,13 @@
 package io.arenadata.kafka.clickhouse.reader.converter;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.ColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
+import org.apache.avro.Schema;
 
 import java.util.Map;
 
 public interface SqlTypeConverter {
 
-    default Object convert(ColumnType type, Object value) {
+    default Object convert(Schema.Type type, Object value) {
         if (value == null) {
             return null;
         }
@@ -44,5 +44,5 @@ public interface SqlTypeConverter {
         }
     }
 
-    Map<ColumnType, Map<Class<?>, ColumnTransformer>> getTransformerMap();
+    Map<Schema.Type, Map<Class<?>, ColumnTransformer>> getTransformerMap();
 }

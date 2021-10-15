@@ -25,10 +25,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLClient;
-import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.SQLRowStream;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.avro.Schema;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
@@ -52,8 +52,9 @@ public class ClickhouseDatabaseExecutor implements DatabaseExecutor {
                         Handler<AsyncResult<Void>> handler) {
         sqlClient.getConnection(conn -> {
             if (conn.succeeded()) {
-                final SQLConnection sqlConn = conn.result();
-                AtomicInteger chunkNumber = new AtomicInteger(1);
+                val columnTypes = getColumnTypes(query.getAvroSchema());
+                val sqlConn = conn.result();
+                val chunkNumber = new AtomicInteger(1);
                 val dataSet = new ArrayList<List<?>>();
                 log.debug("Start execution query [{}]", query.getSql());
                 sqlConn.queryStream(query.getSql(), ar -> {
@@ -63,8 +64,7 @@ public class ClickhouseDatabaseExecutor implements DatabaseExecutor {
                             val rowData = new ArrayList<>();
                             for (int i = 0; i < row.size(); i++) {
                                 try {
-                                    rowData.add(typeConverter.convert(query.getMetadata().get(i).getType(),
-                                            row.getValue(i)));
+                                    rowData.add(typeConverter.convert(columnTypes.get(i), row.getValue(i)));
                                 } catch (Exception e) {
                                     final String errMsg = String.format("Error in converting row column [%d] value [%s]",
                                             i,
@@ -113,5 +113,28 @@ public class ClickhouseDatabaseExecutor implements DatabaseExecutor {
                 handler.handle(Future.failedFuture(conn.cause()));
             }
         });
+    }
+
+    private List<Schema.Type> getColumnTypes(String schemaString) {
+        val schema = new Schema.Parser().parse(schemaString);
+        val fields = schema.getFields();
+        List<Schema.Type> result = new ArrayList<>();
+        for (val field : fields) {
+            val typeSchema = field.schema();
+            if (typeSchema.isUnion()) {
+                val first = typeSchema.getTypes().stream()
+                        .filter(schema2 -> schema2.getType() != Schema.Type.NULL)
+                        .findFirst();
+                if (first.isPresent()) {
+                    result.add(first.get().getType());
+                } else {
+                    result.add(Schema.Type.NULL);
+                }
+                continue;
+            }
+
+            result.add(typeSchema.getType());
+        }
+        return result;
     }
 }

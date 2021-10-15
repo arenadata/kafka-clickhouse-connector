@@ -18,11 +18,11 @@ package io.arenadata.kafka.clickhouse.reader.configuration;
 import io.arenadata.kafka.clickhouse.reader.configuration.properties.ClickHouseProperties;
 import io.arenadata.kafka.clickhouse.reader.converter.ClickhouseTypeToSqlTypeConverter;
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.ColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
 import io.arenadata.kafka.clickhouse.reader.service.DatabaseExecutor;
 import io.arenadata.kafka.clickhouse.reader.service.impl.ClickhouseDatabaseExecutor;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +40,7 @@ public class QueryConfiguration {
     @Bean("clickhouseDatabaseExecutorList")
     public List<DatabaseExecutor> clickhouseExecutors(Vertx vertx,
                                                       ClickHouseProperties clickhouseProperties,
-                                                      @Qualifier("clickhouseTransformerMap") Map<ColumnType, Map<Class<?>, ColumnTransformer>> columnTypeMap) {
+                                                      @Qualifier("clickhouseTransformerMap") Map<Schema.Type, Map<Class<?>, ColumnTransformer>> columnTypeMap) {
         final List<String> hostList = getHostList(clickhouseProperties.getHosts());
         final List<DatabaseExecutor> databaseExecutors = hostList.stream()
                 .map(host -> {

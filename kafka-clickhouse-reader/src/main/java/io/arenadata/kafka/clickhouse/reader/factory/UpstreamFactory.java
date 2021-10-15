@@ -17,6 +17,7 @@ package io.arenadata.kafka.clickhouse.reader.factory;
 
 import io.arenadata.kafka.clickhouse.reader.upstream.Upstream;
 
+
 public interface UpstreamFactory<T> extends AutoCloseable {
     Upstream<T> create(String avroSchema);
 }

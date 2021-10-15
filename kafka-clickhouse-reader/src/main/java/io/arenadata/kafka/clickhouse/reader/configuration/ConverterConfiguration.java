@@ -17,11 +17,10 @@ package io.arenadata.kafka.clickhouse.reader.configuration;
 
 import io.arenadata.kafka.clickhouse.reader.converter.impl.*;
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.ColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
+import org.apache.avro.Schema;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,31 +29,15 @@ import static io.arenadata.kafka.clickhouse.reader.converter.transformer.ColumnT
 @Configuration
 public class ConverterConfiguration {
 
-    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss[.SSS[SSS]]";
-
     @Bean("clickhouseTransformerMap")
-    public Map<ColumnType, Map<Class<?>, ColumnTransformer>> clickhouseTransformerMap() {
-        Map<ColumnType, Map<Class<?>, ColumnTransformer>> transformerMap = new HashMap<>();
-        Map<Class<?>, ColumnTransformer> varcharTransformerMap = getTransformerMap(new VarcharFromStringTransformer());
-        Map<Class<?>, ColumnTransformer> longFromNumberTransformerMap = getTransformerMap(new LongFromNumberTransformer());
-        Map<Class<?>, ColumnTransformer> integerTransformerMap = getTransformerMap(new IntegerFromNumberTransformer());
-        transformerMap.put(ColumnType.CHAR, varcharTransformerMap);
-        transformerMap.put(ColumnType.VARCHAR, varcharTransformerMap);
-        transformerMap.put(ColumnType.BIGINT, longFromNumberTransformerMap);
-        transformerMap.put(ColumnType.INT, longFromNumberTransformerMap);
-        transformerMap.put(ColumnType.INT32, integerTransformerMap);
-        transformerMap.put(ColumnType.DOUBLE, getTransformerMap(new DoubleFromNumberTransformer()));
-        transformerMap.put(ColumnType.FLOAT, getTransformerMap(new FloatFromNumberTransformer()));
-        transformerMap.put(ColumnType.DATE, integerTransformerMap);
-        transformerMap.put(ColumnType.TIME, longFromNumberTransformerMap);
-        transformerMap.put(ColumnType.TIMESTAMP, getTransformerMap(new LongFromLocalDateTimeStringTransformer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)),
-                new LongTsFromLongTransformer()));
-        transformerMap.put(ColumnType.BOOLEAN, getTransformerMap(new BooleanFromBooleanTransformer(),
-                new BooleanFromNumericTransformer()));
-        transformerMap.put(ColumnType.BLOB, getTransformerMap(new BlobFromObjectTransformer()));
-        transformerMap.put(ColumnType.UUID, varcharTransformerMap);
-        transformerMap.put(ColumnType.LINK, varcharTransformerMap);
-        transformerMap.put(ColumnType.ANY, getTransformerMap(new AnyFromObjectTransformer()));
+    public Map<Schema.Type, Map<Class<?>, ColumnTransformer>> clickhouseTransformerMap() {
+        Map<Schema.Type, Map<Class<?>, ColumnTransformer>> transformerMap = new HashMap<>();
+        transformerMap.put(Schema.Type.STRING, getTransformerMap(new StringFromStringTransformer(), new StringFromObjectTransformer()));
+        transformerMap.put(Schema.Type.INT, getTransformerMap(new IntFromNumberTransformer(), new IntFromLocalDateTransformer()));
+        transformerMap.put(Schema.Type.LONG, getTransformerMap(new LongFromNumberTransformer(), new LongFromLocalDateTimeTransformer(), new LongFromLocalTimeTransformer()));
+        transformerMap.put(Schema.Type.FLOAT, getTransformerMap(new FloatFromNumberTransformer()));
+        transformerMap.put(Schema.Type.DOUBLE, getTransformerMap(new DoubleFromNumberTransformer()));
+        transformerMap.put(Schema.Type.BOOLEAN, getTransformerMap(new BooleanFromBooleanTransformer(), new BooleanFromNumberTransformer()));
         return transformerMap;
     }
 }

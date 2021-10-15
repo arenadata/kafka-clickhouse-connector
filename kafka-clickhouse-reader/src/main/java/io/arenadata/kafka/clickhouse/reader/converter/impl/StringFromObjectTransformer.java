@@ -13,8 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.arenadata.kafka.clickhouse.reader.model;
+package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
-public enum SystemMetadata {
-    SCHEMA
+import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
+
+import java.util.Collection;
+import java.util.Collections;
+
+public class StringFromObjectTransformer extends AbstractColumnTransformer<String, Object> {
+
+    @Override
+    public String transformValue(Object value) {
+        return value == null ? null : value.toString();
+    }
+
+    @Override
+    public Collection<Class<?>> getTransformClasses() {
+        return Collections.singletonList(Object.class);
+    }
 }

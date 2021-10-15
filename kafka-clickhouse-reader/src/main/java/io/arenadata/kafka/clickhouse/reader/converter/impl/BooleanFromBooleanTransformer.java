@@ -16,7 +16,6 @@
 package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,10 +30,5 @@ public class BooleanFromBooleanTransformer extends AbstractColumnTransformer<Boo
     @Override
     public Collection<Class<?>> getTransformClasses() {
         return Collections.singletonList(Boolean.class);
-    }
-
-    @Override
-    public ColumnType getType() {
-        return ColumnType.BOOLEAN;
     }
 }

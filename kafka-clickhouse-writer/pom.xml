@@ -25,7 +25,7 @@
     <parent>
         <artifactId>kafka-clickhouse-connector-parent</artifactId>
         <groupId>io.arenadata.dtm</groupId>
-        <version>3.5.4</version>
+        <version>3.5.5</version>
     </parent>
 
     <dependencies>

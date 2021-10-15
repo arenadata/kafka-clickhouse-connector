@@ -16,26 +16,20 @@
 package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class BigintFromNumberTransformer extends AbstractColumnTransformer<Long, Number> {
+public class IntFromNumberTransformer extends AbstractColumnTransformer<Integer, Number> {
 
     @Override
-    public Long transformValue(Number value) {
-        return value.longValue();
+    public Integer transformValue(Number value) {
+        return value != null ? value.intValue() : null;
     }
 
     @Override
     public Collection<Class<?>> getTransformClasses() {
-        return Arrays.asList(Long.class, Integer.class, BigInteger.class);
-    }
-
-    @Override
-    public ColumnType getType() {
-        return ColumnType.BIGINT;
+        return Arrays.asList(BigInteger.class, Long.class, Integer.class, Short.class);
     }
 }

@@ -16,25 +16,21 @@
 package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
+import io.arenadata.kafka.clickhouse.util.DateTimeUtils;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 
-public class AnyFromObjectTransformer extends AbstractColumnTransformer<Object, Object> {
+public class LongFromLocalDateTimeTransformer extends AbstractColumnTransformer<Long, LocalDateTime> {
 
     @Override
-    public Object transformValue(Object value) {
-        return value;
+    public Long transformValue(LocalDateTime value) {
+        return value != null ? DateTimeUtils.toMicros(value) : null;
     }
 
     @Override
     public Collection<Class<?>> getTransformClasses() {
-        return Collections.singletonList(Object.class);
-    }
-
-    @Override
-    public ColumnType getType() {
-        return ColumnType.ANY;
+        return Collections.singletonList(LocalDateTime.class);
     }
 }

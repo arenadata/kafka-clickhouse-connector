@@ -15,8 +15,6 @@
  */
 package io.arenadata.kafka.clickhouse.reader.converter.transformer;
 
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +35,4 @@ public interface ColumnTransformer {
     Object transform(Object value);
 
     Collection<Class<?>> getTransformClasses();
-
-    ColumnType getType();
 }

@@ -16,9 +16,9 @@
 package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -26,20 +26,13 @@ public class DoubleFromNumberTransformer extends AbstractColumnTransformer<Doubl
 
     @Override
     public Double transformValue(Number value) {
-        return value.doubleValue();
+        return value != null ? value.doubleValue() : null;
     }
 
     @Override
     public Collection<Class<?>> getTransformClasses() {
-        return Arrays.asList(Double.class,
-            Float.class,
-            Long.class,
-            Integer.class,
-            BigDecimal.class);
-    }
-
-    @Override
-    public ColumnType getType() {
-        return ColumnType.DOUBLE;
+        return Arrays.asList(
+                Double.class, Float.class, BigDecimal.class,
+                BigInteger.class, Long.class, Integer.class, Short.class);
     }
 }

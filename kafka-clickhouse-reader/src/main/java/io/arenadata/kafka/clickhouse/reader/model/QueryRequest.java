@@ -32,7 +32,6 @@ public class QueryRequest {
     String kafkaTopic;
     int chunkSize = 1000;
     String avroSchema;
-    List<ColumnMetadata> metadata;
     int streamNumber = 0;
     int streamTotal = 1;
 
@@ -45,7 +44,6 @@ public class QueryRequest {
         newQueryRequest.setKafkaBrokers(kafkaBrokers);
         newQueryRequest.setChunkSize(chunkSize);
         newQueryRequest.setAvroSchema(avroSchema);
-        newQueryRequest.setMetadata(metadata);
         newQueryRequest.setStreamNumber(streamNumber);
         newQueryRequest.setStreamTotal(streamTotal);
         return newQueryRequest;
