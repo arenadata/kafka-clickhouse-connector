@@ -16,25 +16,21 @@
 package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
+import io.arenadata.kafka.clickhouse.util.DateTimeUtils;
 
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.Collections;
 
-public class VarcharFromStringTransformer extends AbstractColumnTransformer<String, Object> {
+public class LongFromLocalTimeTransformer extends AbstractColumnTransformer<Long, LocalTime> {
 
     @Override
-    public String transformValue(Object value) {
-        return value == null ? null : value.toString();
+    public Long transformValue(LocalTime value) {
+        return value != null ? DateTimeUtils.toMicros(value) : null;
     }
 
     @Override
     public Collection<Class<?>> getTransformClasses() {
-        return Collections.singletonList(String.class);
-    }
-
-    @Override
-    public ColumnType getType() {
-        return ColumnType.VARCHAR;
+        return Collections.singletonList(LocalTime.class);
     }
 }

@@ -16,7 +16,7 @@
 package io.arenadata.kafka.clickhouse.reader.converter;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.ColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
+import org.apache.avro.Schema;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -26,16 +26,16 @@ import java.util.Map;
 @Component("clickhouseTypeToSqlTypeConverter")
 public class ClickhouseTypeToSqlTypeConverter implements SqlTypeConverter {
 
-    private final Map<ColumnType, Map<Class<?>, ColumnTransformer>> transformerMap;
+    private final Map<Schema.Type, Map<Class<?>, ColumnTransformer>> transformerMap;
 
     @Autowired
     public ClickhouseTypeToSqlTypeConverter(@Qualifier("clickhouseTransformerMap")
-                                              Map<ColumnType, Map<Class<?>, ColumnTransformer>> transformerMap) {
+                                                    Map<Schema.Type, Map<Class<?>, ColumnTransformer>> transformerMap) {
         this.transformerMap = transformerMap;
     }
 
     @Override
-    public Map<ColumnType, Map<Class<?>, ColumnTransformer>> getTransformerMap() {
+    public Map<Schema.Type, Map<Class<?>, ColumnTransformer>> getTransformerMap() {
         return this.transformerMap;
     }
 

@@ -16,25 +16,20 @@
 package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
 import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
-import io.arenadata.kafka.clickhouse.reader.model.ColumnType;
 
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
-public class BlobFromObjectTransformer extends AbstractColumnTransformer<Object, Object> {
+public class BooleanFromNumberTransformer extends AbstractColumnTransformer<Boolean, Number> {
 
     @Override
-    public Object transformValue(Object value) {
-        return value;
+    public Boolean transformValue(Number value) {
+        return value != null ? value.longValue() == 1L : null;
     }
 
     @Override
     public Collection<Class<?>> getTransformClasses() {
-        return Collections.singletonList(Object.class);
-    }
-
-    @Override
-    public ColumnType getType() {
-        return ColumnType.BLOB;
+        return Arrays.asList(BigInteger.class, Long.class, Integer.class, Short.class);
     }
 }

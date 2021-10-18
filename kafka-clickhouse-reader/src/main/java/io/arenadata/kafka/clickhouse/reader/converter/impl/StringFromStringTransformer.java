@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.arenadata.kafka.clickhouse.reader.model;
+package io.arenadata.kafka.clickhouse.reader.converter.impl;
 
-/**
- * Logical model data types
- */
-public enum ColumnType {
-    VARCHAR,
-    CHAR,
-    BIGINT,
-    INT,
-    INT32,
-    DOUBLE,
-    FLOAT,
-    DATE,
-    TIME,
-    TIMESTAMP,
-    BOOLEAN,
-    BLOB,
-    UUID,
-    LINK,
-    ANY;
+import io.arenadata.kafka.clickhouse.reader.converter.transformer.AbstractColumnTransformer;
+
+import java.util.Collection;
+import java.util.Collections;
+
+public class StringFromStringTransformer extends AbstractColumnTransformer<String, String> {
+
+    @Override
+    public String transformValue(String value) {
+        return value;
+    }
+
+    @Override
+    public Collection<Class<?>> getTransformClasses() {
+        return Collections.singletonList(String.class);
+    }
 }
