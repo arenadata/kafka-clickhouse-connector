@@ -17,9 +17,10 @@ package io.arenadata.kafka.clickhouse.reader.service;
 
 import io.arenadata.kafka.clickhouse.reader.model.QueryRequest;
 import io.arenadata.kafka.clickhouse.reader.model.QueryResultItem;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import io.vertx.core.Future;
+
+import java.util.function.Consumer;
 
 public interface DatabaseExecutor {
-  void execute(QueryRequest query, Handler<AsyncResult<QueryResultItem>> itemHandler, Handler<AsyncResult<Void>> handler);
+  Future<Void> execute(QueryRequest query, Consumer<QueryResultItem> itemHandler);
 }

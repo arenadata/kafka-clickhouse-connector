@@ -15,9 +15,12 @@
  */
 package io.arenadata.kafka.clickhouse.reader.factory;
 
+import io.arenadata.kafka.clickhouse.reader.model.KafkaBrokerInfo;
 import io.arenadata.kafka.clickhouse.reader.upstream.Upstream;
+
+import java.util.List;
 
 
 public interface UpstreamFactory<T> extends AutoCloseable {
-    Upstream<T> create(String avroSchema);
+    Upstream<T> create(String avroSchema, List<KafkaBrokerInfo> brokers);
 }

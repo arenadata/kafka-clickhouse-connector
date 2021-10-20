@@ -19,13 +19,10 @@ import io.arenadata.kafka.clickhouse.reader.converter.SqlTypeConverter;
 import io.arenadata.kafka.clickhouse.reader.model.QueryRequest;
 import io.arenadata.kafka.clickhouse.reader.model.QueryResultItem;
 import io.arenadata.kafka.clickhouse.reader.service.DatabaseExecutor;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLClient;
-import io.vertx.ext.sql.SQLRowStream;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.avro.Schema;
@@ -34,6 +31,7 @@ import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 @Slf4j
 public class ClickhouseDatabaseExecutor implements DatabaseExecutor {
@@ -47,71 +45,66 @@ public class ClickhouseDatabaseExecutor implements DatabaseExecutor {
     }
 
     @Override
-    public void execute(QueryRequest query,
-                        Handler<AsyncResult<QueryResultItem>> itemHandler,
-                        Handler<AsyncResult<Void>> handler) {
-        sqlClient.getConnection(conn -> {
-            if (conn.succeeded()) {
+    public Future<Void> execute(QueryRequest query,
+                                Consumer<QueryResultItem> itemHandler) {
+        return Future.future(promise -> {
+            sqlClient.getConnection(conn -> {
+                if (conn.failed()) {
+                    log.error("Error creating connection by request [{}]", query);
+                    promise.fail(conn.cause());
+                    return;
+                }
+
                 val columnTypes = getColumnTypes(query.getAvroSchema());
                 val sqlConn = conn.result();
                 val chunkNumber = new AtomicInteger(1);
                 val dataSet = new ArrayList<List<?>>();
                 log.debug("Start execution query [{}]", query.getSql());
                 sqlConn.queryStream(query.getSql(), ar -> {
-                    if (ar.succeeded()) {
-                        final SQLRowStream sqlRowStream = ar.result();
-                        sqlRowStream.handler(row -> {
-                            val rowData = new ArrayList<>();
-                            for (int i = 0; i < row.size(); i++) {
-                                try {
-                                    rowData.add(typeConverter.convert(columnTypes.get(i), row.getValue(i)));
-                                } catch (Exception e) {
-                                    final String errMsg = String.format("Error in converting row column [%d] value [%s]",
-                                            i,
-                                            row.getValue(i));
-                                    log.error(errMsg, e);
-                                    sqlRowStream.close();
-                                    sqlConn.close();
-                                    handler.handle(Future.failedFuture(errMsg));
-                                }
-                            }
-                            dataSet.add(rowData);
-                            if (dataSet.size() == query.getChunkSize()) {
-                                itemHandler.handle(Future.succeededFuture(
-                                        new QueryResultItem(query.getKafkaTopic(),
-                                                query.getTable(),
-                                                new ArrayList<>(dataSet),
-                                                chunkNumber.getAndIncrement(),
-                                                false))
-                                );
-                                dataSet.clear();
-                            }
-                        }).endHandler(v -> {
-                            itemHandler.handle(Future.succeededFuture(
-                                    new QueryResultItem(query.getKafkaTopic(),
-                                            query.getTable(),
-                                            new ArrayList<>(dataSet),
-                                            chunkNumber.getAndIncrement(),
-                                            true))
-                            );
-                            dataSet.clear();
-                            sqlConn.close();
-                            log.debug("Stop execution query [{}]", query.getSql());
-                            handler.handle(Future.succeededFuture());
-                        }).exceptionHandler(er -> {
-                            log.error("Error in row stream", er.getCause());
-                        });
-                    } else {
-                        log.error("Error executing query [{}]", query.getSql(), ar.cause());
+                    if (ar.failed()) {
+                        log.error("Error creating query stream [{}]", query.getSql(), ar.cause());
                         sqlConn.close();
-                        handler.handle(Future.failedFuture(ar.cause()));
+                        promise.fail(ar.cause());
+                        return;
                     }
+
+                    val sqlRowStream = ar.result();
+                    sqlRowStream.handler(row -> {
+                        val rowData = new ArrayList<>();
+                        for (int i = 0; i < row.size(); i++) {
+                            try {
+                                rowData.add(typeConverter.convert(columnTypes.get(i), row.getValue(i)));
+                            } catch (Exception e) {
+                                val errMsg = String.format("Error in converting row column [%d] value [%s]", i, row.getValue(i));
+                                log.error(errMsg, e);
+                                sqlRowStream.close();
+                                sqlConn.close();
+                                promise.fail(new IllegalArgumentException(errMsg, e));
+                                return;
+                            }
+                        }
+                        dataSet.add(rowData);
+                        if (dataSet.size() == query.getChunkSize()) {
+                            itemHandler.accept(new QueryResultItem(query.getKafkaTopic(), query.getTable(),
+                                    new ArrayList<>(dataSet), chunkNumber.getAndIncrement(), false));
+                            dataSet.clear();
+                        }
+                    }).endHandler(v -> {
+                        itemHandler.accept(new QueryResultItem(query.getKafkaTopic(), query.getTable(),
+                                new ArrayList<>(dataSet), chunkNumber.getAndIncrement(), true));
+                        log.debug("Stop execution query [{}]", query.getSql());
+                        dataSet.clear();
+                        sqlConn.close();
+                        promise.complete();
+                    }).exceptionHandler(er -> {
+                        log.error("Error in row stream", er);
+                        dataSet.clear();
+                        sqlRowStream.close();
+                        sqlConn.close();
+                        promise.fail(er);
+                    });
                 });
-            } else {
-                log.error("Error creating connection by request [{}]",
-                        query);
-                handler.handle(Future.failedFuture(conn.cause()));
-            }
+            });
         });
     }
 
