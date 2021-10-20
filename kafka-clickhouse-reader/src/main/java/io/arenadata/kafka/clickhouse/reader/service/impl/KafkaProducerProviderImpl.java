@@ -21,6 +21,7 @@ import io.arenadata.kafka.clickhouse.reader.factory.VertxKafkaProducerFactory;
 import io.arenadata.kafka.clickhouse.reader.service.KafkaProducerProvider;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import lombok.val;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -32,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class KafkaProducerProviderImpl implements KafkaProducerProvider {
 
-    private final Map<String, KafkaProducer<byte[], byte[]>> kafkaProducerMap = new ConcurrentHashMap<>();
+    private final Map<String, KafkaProducerFactory<byte[], byte[]>> kafkaProducerMap = new ConcurrentHashMap<>();
     private final KafkaProperties kafkaProperties;
     private final Vertx vertx;
 
@@ -43,17 +44,12 @@ public class KafkaProducerProviderImpl implements KafkaProducerProvider {
     }
 
     @Override
-    public KafkaProducer<byte[], byte[]> getOrCreate(String brokersList) {
-        final KafkaProducer<byte[], byte[]> kafkaProducer = kafkaProducerMap.get(brokersList);
-        if (kafkaProducer == null) {
-            kafkaProducerMap.put(brokersList, getKafkaProducerFactory(kafkaProperties, brokersList)
-                    .create(kafkaProperties.getProducer().getProperty()));
-        }
-        return kafkaProducerMap.get(brokersList);
+    public KafkaProducer<byte[], byte[]> create(String brokersList) {
+        val kafkaProducer = kafkaProducerMap.computeIfAbsent(brokersList, this::getKafkaProducerFactory);
+        return kafkaProducer.create(kafkaProperties.getProducer().getProperty());
     }
 
-    private KafkaProducerFactory<byte[], byte[]> getKafkaProducerFactory(KafkaProperties kafkaProperties,
-                                                                         String brokersList) {
+    private KafkaProducerFactory<byte[], byte[]> getKafkaProducerFactory(String brokersList) {
         var props = new HashMap<>(kafkaProperties.getProducer().getProperty());
         props.put("bootstrap.servers", brokersList);
         return new VertxKafkaProducerFactory<>(this.vertx, props);

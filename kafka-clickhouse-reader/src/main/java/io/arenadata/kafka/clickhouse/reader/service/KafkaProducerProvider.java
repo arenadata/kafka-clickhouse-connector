@@ -19,5 +19,5 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 
 public interface KafkaProducerProvider {
 
-    KafkaProducer<byte[], byte[]> getOrCreate(String brokersList);
+    KafkaProducer<byte[], byte[]> create(String brokersList);
 }

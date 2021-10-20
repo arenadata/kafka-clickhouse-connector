@@ -28,6 +28,7 @@ import lombok.val;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -52,26 +53,18 @@ public abstract class BaseQueryExecutorService implements QueryExecutorService {
 
     private void executeInternal(QueryRequest query, Handler<AsyncResult<Void>> handler) {
         List<Future> queryFutures = new ArrayList<>();
-        List<Future> messageFutures = new ArrayList<>();
         IntStream.range(0, databaseExecutors.size()).forEach(i -> {
             final QueryRequest queryRequest = query.copy();
             queryRequest.setStreamTotal(databaseExecutors.size());
             queryRequest.setStreamNumber(i);
             queryFutures.add(Future.future((Promise<Void> promise) -> {
-                taskExecutor.execute(executeQuery(databaseExecutors.get(i), queryRequest, messageFutures), promise);
+                taskExecutor.execute(executeQuery(databaseExecutors.get(i), queryRequest), promise);
             }));
         });
         CompositeFuture.join(queryFutures)
                 .onSuccess(success -> {
-                    CompositeFuture.join(messageFutures)
-                            .onSuccess(msgSuccess -> {
-                                log.debug("Query executed successfully {}", query);
-                                handler.handle(Future.succeededFuture());
-                            })
-                            .onFailure(fail -> {
-                                log.error("Error in processing message into kafka topic by query {}", query, fail);
-                                handler.handle(Future.failedFuture(fail));
-                            });
+                    log.debug("Query executed successfully {}", query);
+                    handler.handle(Future.succeededFuture());
                 })
                 .onFailure(fail -> {
                     log.error("Error in executing query {}", query, fail);
@@ -80,18 +73,20 @@ public abstract class BaseQueryExecutorService implements QueryExecutorService {
     }
 
     private Handler<Promise<Void>> executeQuery(DatabaseExecutor executor,
-                                                QueryRequest query,
-                                                List<Future> messageFutures) {
-        val upstream = upstreamFactory.create(query.getAvroSchema());
+                                                QueryRequest query) {
+        val upstream = upstreamFactory.create(query.getAvroSchema(), query.getKafkaBrokers());
+        List<Future> messageFutures = new CopyOnWriteArrayList<>();
         return ((Promise<Void> p) -> {
-            executor.execute(query, ir -> {
-                if (ir.succeeded()) {
-                    final QueryResultItem result = ir.result();
-                    messageFutures.add(pushMessage(query, upstream, result));
-                } else {
-                    p.fail(ir.cause());
-                }
-            }, p);
+            executor.execute(query, item -> messageFutures.add(pushMessage(query, upstream, item)))
+                    .compose(unused -> CompositeFuture.join(messageFutures))
+                    .onComplete(ar -> {
+                        upstream.close();
+                        if (ar.succeeded()) {
+                            p.complete();
+                        } else {
+                            p.fail(ar.cause());
+                        }
+                    });
         });
     }
 

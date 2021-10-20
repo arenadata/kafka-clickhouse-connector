@@ -16,14 +16,12 @@
 package io.arenadata.kafka.clickhouse.reader.service;
 
 import io.arenadata.kafka.clickhouse.avro.model.DtmQueryResponseMetadata;
-import io.arenadata.kafka.clickhouse.reader.model.KafkaBrokerInfo;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-
-import java.util.List;
+import io.vertx.kafka.client.producer.KafkaProducer;
 
 public interface PublishService {
-    void publishQueryResult(List<KafkaBrokerInfo> kafkaBrokers,
+    void publishQueryResult(KafkaProducer<byte[], byte[]> kafkaProducer,
                             String topicName,
                             DtmQueryResponseMetadata key,
                             byte[] message,

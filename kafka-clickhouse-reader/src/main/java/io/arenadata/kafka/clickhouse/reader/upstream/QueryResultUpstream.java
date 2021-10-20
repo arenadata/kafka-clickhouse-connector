@@ -24,7 +24,9 @@ import io.arenadata.kafka.clickhouse.reader.service.PublishService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.avro.Schema;
 
 import java.util.stream.Collectors;
@@ -35,20 +37,29 @@ public class QueryResultUpstream implements Upstream<QueryResultItem> {
     private final PublishService publishService;
     private final Schema schema;
     private final AvroQueryResultEncoder resultEncoder;
+    private final KafkaProducer<byte[], byte[]> kafkaProducer;
 
-    public QueryResultUpstream(PublishService publishService, Schema schema) {
+    public QueryResultUpstream(PublishService publishService,
+                               Schema schema,
+                               KafkaProducer<byte[], byte[]> kafkaProducer) {
         this.publishService = publishService;
         this.schema = schema;
+        this.kafkaProducer = kafkaProducer;
         this.resultEncoder = new AvroQueryResultEncoder();
     }
 
     @Override
     public void push(QueryRequest queryRequest, QueryResultItem item, Handler<AsyncResult<Void>> handler) {
         try {
-            final byte[] bytes = resultEncoder.encode(item.getDataSet().stream()
+            val bytes = resultEncoder.encode(item.getDataSet().stream()
                     .map(row -> new AvroQueryResultRow(schema, row))
                     .collect(Collectors.toList()), schema);
-            send(queryRequest, item, bytes, handler);
+            val response = new DtmQueryResponseMetadata(item.getTable(),
+                    queryRequest.getStreamNumber(),
+                    queryRequest.getStreamTotal(),
+                    item.getChunkNumber(),
+                    item.getIsLastChunk());
+            this.publishService.publishQueryResult(kafkaProducer, item.getKafkaTopic(), response, bytes, handler);
         } catch (Exception e) {
             log.error("Error in sending message to kafka topic: table [{}] chunkNumber [{}] topic [{}]",
                     item.getTable(),
@@ -58,21 +69,9 @@ public class QueryResultUpstream implements Upstream<QueryResultItem> {
         }
     }
 
-    private void send(QueryRequest queryRequest, QueryResultItem item, byte[] compressedBytes, Handler<AsyncResult<Void>> handler) {
-        DtmQueryResponseMetadata response = new DtmQueryResponseMetadata(item.getTable(),
-                queryRequest.getStreamNumber(),
-                queryRequest.getStreamTotal(),
-                item.getChunkNumber(),
-                item.getIsLastChunk());
-        this.publishService.publishQueryResult(queryRequest.getKafkaBrokers(),
-                item.getKafkaTopic(),
-                response,
-                compressedBytes,
-                handler);
-    }
-
     @Override
     public void close() {
+        kafkaProducer.close();
     }
 
 }
