@@ -58,44 +58,50 @@ public class KafkaConsumerVerticle extends ConfigurableVerticle {
     private final Map<Long, InsertChunk> insertChunks = new HashMap<>();
     private final AtomicLong lastOffset = new AtomicLong(-1);
     private final HashMap<TopicPartition, TopicPartitionConsumer> consumerMap;
-    private TopicPartitionConsumer topicPartitionConsumer;
+    private volatile TopicPartitionConsumer topicPartitionConsumer;
+    private volatile boolean stopped;
     private Future<Object> processFuture;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
         super.start(startFuture);
         vertx.eventBus().consumer(START_TOPIC + context.getContextId(),
-            ar -> getTopicPartitionConsumerFuture());
+                ar -> getTopicPartitionConsumerFuture());
     }
 
     private void getTopicPartitionConsumerFuture() {
         processFuture = Future.succeededFuture();
         consumerService.createTopicPartitionConsumer(context, partitionInfo)
-            .onSuccess(consumer -> {
-                setConsumer(consumer);
-                lastOffset.set(topicPartitionConsumer.getLastOffset());
-                consumer.getKafkaConsumer().handler(record ->
-                    processFuture = processFuture
-                        .compose(v -> parseChunk(record))
-                        .compose(chunk -> insertChunk(context, chunk))
-                        .onFailure(error -> error(context, error)));
-            });
+                .onSuccess(consumer -> {
+                    if (stopped) {
+                        consumer.getKafkaConsumer().close();
+                        return;
+                    }
+
+                    setConsumer(consumer);
+                    lastOffset.set(topicPartitionConsumer.getLastOffset());
+                    consumer.getKafkaConsumer().handler(record ->
+                            processFuture = processFuture
+                                    .compose(v -> parseChunk(record))
+                                    .compose(chunk -> insertChunk(context, chunk))
+                                    .onFailure(error -> error(context, error)));
+                });
     }
 
     private Future<Chunk> parseChunk(KafkaConsumerRecord<byte[], byte[]> record) {
         return Future.future((Promise<Chunk> p) -> {
             if (record.value() == null || record.value().length == 0) {
                 p.complete(Chunk.builder()
-                    .topicPartition(new TopicPartition(record.topic(), record.partition()))
-                    .offset(record.offset())
-                    .rows(Collections.emptyList())
-                    .build());
+                        .topicPartition(new TopicPartition(record.topic(), record.partition()))
+                        .offset(record.offset())
+                        .rows(Collections.emptyList())
+                        .build());
             } else {
                 p.complete(Chunk.builder()
-                    .topicPartition(new TopicPartition(record.topic(), record.partition()))
-                    .offset(record.offset())
-                    .rows(decoder.decode(record.value()))
-                    .build());
+                        .topicPartition(new TopicPartition(record.topic(), record.partition()))
+                        .offset(record.offset())
+                        .rows(decoder.decode(record.value()))
+                        .build());
             }
         });
     }
@@ -106,12 +112,12 @@ public class KafkaConsumerVerticle extends ConfigurableVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
+    public void stop() {
+        stopped = true;
         if (topicPartitionConsumer != null) {
             topicPartitionConsumer.getKafkaConsumer().handler(null);
             topicPartitionConsumer.getKafkaConsumer().close();
         }
-        super.stop(stopFuture);
     }
 
     private Future<Object> insertChunk(InsertDataContext context, Chunk chunk) {
@@ -121,15 +127,15 @@ public class KafkaConsumerVerticle extends ConfigurableVerticle {
             context.setInsertSql(insertRequestFactory.getSql(context));
             ClickhouseInsertSqlRequest sqlRequest = insertRequestFactory.create(context, chunk.getRows());
             InsertChunk insertChunk = new InsertChunk(new PartitionOffset(
-                chunk.getTopicPartition(),
-                chunk.getOffset()),
-                sqlRequest);
+                    chunk.getTopicPartition(),
+                    chunk.getOffset()),
+                    sqlRequest);
             insertChunks.put(chunk.getOffset(), insertChunk);
             if (insertChunks.containsKey(lastOffset.get())) {
                 while (insertChunks.containsKey(lastOffset.incrementAndGet())) ;
                 insertChunkQueue.addAll(insertChunks.values());
                 new HashSet<>(insertChunks.keySet())
-                    .forEach(insertChunks::remove);
+                        .forEach(insertChunks::remove);
                 if (insertChunkQueue.size() >= workerProperties.getMaxFetchSize()) {
                     topicPartitionConsumer.getKafkaConsumer().pause();
                 }
@@ -152,7 +158,7 @@ public class KafkaConsumerVerticle extends ConfigurableVerticle {
     @Override
     public DeploymentOptions getDeploymentOptions() {
         return new DeploymentOptions().setWorker(true)
-            .setWorkerPoolName(workerProperties.getPoolName())
-            .setWorkerPoolSize(workerProperties.getPoolSize());
+                .setWorkerPoolName(workerProperties.getPoolName())
+                .setWorkerPoolSize(workerProperties.getPoolSize());
     }
 }
