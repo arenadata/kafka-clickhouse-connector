@@ -34,7 +34,7 @@
 
     <groupId>io.arenadata.dtm</groupId>
     <artifactId>kafka-clickhouse-connector-parent</artifactId>
-    <version>3.5.5</version>
+    <version>3.5.6</version>
     <packaging>pom</packaging>
 
     <properties>

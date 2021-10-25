@@ -54,23 +54,28 @@ public class KafkaCommitVerticle extends ConfigurableVerticle {
     private final Queue<PartitionOffset> offsetsQueue = new ConcurrentLinkedDeque<>();
     private final KafkaConsumerService consumerService;
     private final InsertDataContext context;
-    private long timerId = -1;
+    private volatile long timerId;
+    private volatile boolean stopped;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
         super.start(startFuture);
         vertx.eventBus().consumer(START_COMMIT + context.getContextId(),
-            ar -> init());
+                ar -> init());
 
         vertx.eventBus().consumer(KAFKA_COMMIT_TOPIC + context.getContextId(),
-            this::collectKafkaMessages);
+                this::collectKafkaMessages);
     }
 
     private void collectKafkaMessages(Message<Object> partitionOffsets) {
+        if (stopped) {
+            return;
+        }
+
         try {
             List<PartitionOffset> offsets = DatabindCodec.mapper()
-                .readValue(partitionOffsets.body().toString(), new TypeReference<List<PartitionOffset>>() {
-                });
+                    .readValue(partitionOffsets.body().toString(), new TypeReference<List<PartitionOffset>>() {
+                    });
             offsetsQueue.addAll(offsets);
         } catch (JsonProcessingException e) {
             log.error("Deserialize PartitionOffsets error [{}]: {}", partitionOffsets, e);
@@ -79,8 +84,11 @@ public class KafkaCommitVerticle extends ConfigurableVerticle {
     }
 
     private void init() {
-        vertx.setPeriodic(1000, timer -> {
-            timerId = timer;
+        if (stopped) {
+            return;
+        }
+
+        timerId = vertx.setPeriodic(1000, timer -> {
             List<PartitionOffset> byCommit = new ArrayList<>();
             while (!offsetsQueue.isEmpty()) {
                 PartitionOffset offset = offsetsQueue.poll();
@@ -96,27 +104,25 @@ public class KafkaCommitVerticle extends ConfigurableVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
-        if (timerId != -1) {
-            vertx.cancelTimer(timerId);
-        }
-        super.stop(stopFuture);
+    public void stop() {
+        stopped = true;
+        vertx.cancelTimer(timerId);
     }
 
     private List<PartitionOffset> commitKafkaMessages(List<PartitionOffset> partitionOffsets) {
         Map<TopicPartition, List<PartitionOffset>> partitionListMap = partitionOffsets.stream()
-            .collect(Collectors.groupingBy(PartitionOffset::getPartition, Collectors.toList()));
+                .collect(Collectors.groupingBy(PartitionOffset::getPartition, Collectors.toList()));
 
         List<PartitionOffset> notExistsConsumers = partitionListMap.entrySet().stream()
-            .filter(e -> !consumerMap.containsKey(e.getKey()))
-            .flatMap(e -> e.getValue().stream())
-            .collect(Collectors.toList());
+                .filter(e -> !consumerMap.containsKey(e.getKey()))
+                .flatMap(e -> e.getValue().stream())
+                .collect(Collectors.toList());
 
         consumerMap.values().forEach(topicPartitionConsumer -> {
             if (partitionListMap.containsKey(topicPartitionConsumer.getTopicPartition())) {
 
                 partitionListMap.get(topicPartitionConsumer.getTopicPartition())
-                    .forEach(partitionOffset -> topicPartitionConsumer.addCompletedOffset(partitionOffset.getOffset()));
+                        .forEach(partitionOffset -> topicPartitionConsumer.addCompletedOffset(partitionOffset.getOffset()));
 
                 String topic = topicPartitionConsumer.getTopicPartition().getTopic();
                 topicPartitionConsumer.getCompletedOffset().ifPresent(offsetAndMetadataMap -> {
@@ -148,7 +154,7 @@ public class KafkaCommitVerticle extends ConfigurableVerticle {
     @Override
     public DeploymentOptions getDeploymentOptions() {
         return new DeploymentOptions().setWorker(true)
-            .setWorkerPoolName(workerProperties.getPoolName())
-            .setWorkerPoolSize(workerProperties.getPoolSize());
+                .setWorkerPoolName(workerProperties.getPoolName())
+                .setWorkerPoolSize(workerProperties.getPoolSize());
     }
 }

@@ -46,18 +46,22 @@ public class InsertVerticle extends ConfigurableVerticle {
     private final DataSourceExecutor executor;
     private final InsertDataContext context;
     private final Queue<InsertChunk> insertChunkQueue;
-    private long timerId = -1L;
+    private volatile boolean stopped;
+    private volatile long timerId;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
         super.start(startFuture);
         vertx.eventBus().consumer(INSERT_START_TOPIC + context.getContextId(),
-            ar -> runProcessInserts());
+                ar -> runProcessInserts());
     }
 
     private void runProcessInserts() {
-        vertx.setTimer(workerProperties.getInsertPeriodMs(), timer -> {
-            timerId = timer;
+        if (stopped) {
+            return;
+        }
+
+        timerId = vertx.setTimer(workerProperties.getInsertPeriodMs(), timer -> {
             log.debug("Batch queue size [{}]", insertChunkQueue.size());
             InsertChunk insertChunk = insertChunkQueue.poll();
             if (insertChunk != null) {
@@ -76,7 +80,7 @@ public class InsertVerticle extends ConfigurableVerticle {
             InsertChunk chunk = insertChunkQueue.poll();
             if (chunk != null) {
                 insertChunk.getInsertSqlRequest().getParams()
-                    .addAll(chunk.getInsertSqlRequest().getParams());
+                        .addAll(chunk.getInsertSqlRequest().getParams());
                 partitionOffsets.add(chunk.getPartitionOffset());
                 if (--batchSize == 0) break;
             } else {
@@ -88,9 +92,9 @@ public class InsertVerticle extends ConfigurableVerticle {
             if (ar.succeeded()) {
                 try {
                     log.debug("Written lines [{}] to data source",
-                        insertChunk.getInsertSqlRequest().getParams().size());
+                            insertChunk.getInsertSqlRequest().getParams().size());
                     vertx.eventBus().publish(KafkaConsumerVerticle.KAFKA_COMMIT_TOPIC + context.getContextId(),
-                        DatabindCodec.mapper().writeValueAsString(partitionOffsets));
+                            DatabindCodec.mapper().writeValueAsString(partitionOffsets));
                     runProcessInserts();
                 } catch (JsonProcessingException e) {
                     log.error("Serialize partitionOffsets error: [{}]: {}", partitionOffsets, e.getMessage());
@@ -104,11 +108,9 @@ public class InsertVerticle extends ConfigurableVerticle {
 
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
-        if (timerId != -1) {
-            vertx.cancelTimer(timerId);
-        }
-        super.stop(stopFuture);
+    public void stop() {
+        stopped = true;
+        vertx.cancelTimer(timerId);
     }
 
     private void error(InsertDataContext context, Throwable throwable) {
@@ -125,8 +127,8 @@ public class InsertVerticle extends ConfigurableVerticle {
     @Override
     public DeploymentOptions getDeploymentOptions() {
         return new DeploymentOptions().setWorker(true)
-            .setWorkerPoolName(workerProperties.getPoolName())
-            .setWorkerPoolSize(workerProperties.getPoolSize());
+                .setWorkerPoolName(workerProperties.getPoolName())
+                .setWorkerPoolSize(workerProperties.getPoolSize());
     }
 
 }
